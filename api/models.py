@@ -32,3 +32,11 @@ class UserCreate(TunedModel):
                 status_code=422, detail="Name should contains only letters"
             )
         return value
+
+
+class DeleteUserResponse(TunedModel):
+    deleted_user_id: uuid.UUID
+
+
+class UpdateUserResponse(TunedModel):
+    update_user_id: uuid.UUID
