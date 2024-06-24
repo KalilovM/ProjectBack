@@ -2,7 +2,8 @@ import re
 import uuid
 
 from fastapi import HTTPException
-from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator, constr
+from typing import Optional
 
 LETTER_MATCH_PATTERN = re.compile("^[a-zA-Z]+$")
 
@@ -19,7 +20,7 @@ class ShowUser(TunedModel):
     is_active: bool
 
 
-class UserCreate(TunedModel):
+class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
@@ -34,9 +35,19 @@ class UserCreate(TunedModel):
         return value
 
 
-class DeleteUserResponse(TunedModel):
-    deleted_user_id: uuid.UUID
+class UserBaseResponse(BaseModel):
+    user_id: uuid.UUID
 
 
-class UpdateUserResponse(TunedModel):
-    update_user_id: uuid.UUID
+class UpdateUserRequest(BaseModel):
+    username: Optional[constr(min_length=1)]
+    email: Optional[EmailStr]
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, value):
+        if not LETTER_MATCH_PATTERN.match(value):
+            raise HTTPException(
+                status_code=422, detail="Name should contains only letters"
+            )
+        return value
