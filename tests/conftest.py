@@ -2,13 +2,13 @@ import asyncio
 import os
 
 import asyncpg
-
-import settings
 import pytest
-from db.session import get_db
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+import settings
+from db.session import get_db
 
 test_engine = create_async_engine(settings.TEST_DATABASE_URL, future=True, echo=True)
 test_async_session = async_sessionmaker(
@@ -55,13 +55,11 @@ async def clean_tables(async_session_test):
 
 async def _get_test_db():
     try:
-        test_engine = create_async_engine(
-            settings.TEST_DATABASE_URL, future=True, echo=True
+        engine = create_async_engine(settings.TEST_DATABASE_URL, future=True, echo=True)
+        async_session = async_sessionmaker(
+            bind=engine, expire_on_commit=False, class_=AsyncSession
         )
-        test_async_session = async_sessionmaker(
-            bind=test_engine, expire_on_commit=False, class_=AsyncSession
-        )
-        yield test_async_session()
+        yield async_session()
     finally:
         pass
 
@@ -92,3 +90,21 @@ async def get_user_from_database(asyncpg_pool):
             )
 
     return get_user_from_db_by_uuid
+
+
+@pytest.fixture
+async def create_user_in_db(asyncpg_pool):
+    async def create_user_in_db(
+        user_id: str, username: str, email: str, password: str, is_active: bool
+    ):
+        async with asyncpg_pool.acquire() as connection:
+            return await connection.execute(
+                """INSERT INTO users VALUES ($1, $2, $3, $4, $5)""",
+                user_id,
+                username,
+                email,
+                password,
+                is_active,
+            )
+
+    return create_user_in_db

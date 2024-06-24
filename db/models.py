@@ -1,7 +1,8 @@
-from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped
-from sqlalchemy import String, Boolean
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
+
+from sqlalchemy import Boolean, String
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):

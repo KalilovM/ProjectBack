@@ -1,9 +1,10 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import APIRouter, Depends, HTTPException
 from typing import Union
 from uuid import UUID
 
-from api.models import UserCreate, ShowUser, DeleteUserResponse
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from api.models import DeleteUserResponse, ShowUser, UserCreate
 from db.dals import UserDAL
 from db.session import get_db
 

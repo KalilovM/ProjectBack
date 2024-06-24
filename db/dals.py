@@ -1,9 +1,10 @@
-from fastapi import HTTPException
-from sqlalchemy.ext.asyncio.session import AsyncSession
 from typing import Union
 from uuid import UUID
 
-from sqlalchemy import update, and_
+from fastapi import HTTPException
+from sqlalchemy import and_, update
+from sqlalchemy.ext.asyncio.session import AsyncSession
+
 from db.models import User
 
 
