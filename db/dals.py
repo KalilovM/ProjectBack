@@ -1,10 +1,12 @@
-from typing import Union
+from __future__ import annotations
+
+import logging
 from uuid import UUID
 
-from fastapi import HTTPException
-from sqlalchemy import and_, update, select
+from sqlalchemy import and_
+from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio.session import AsyncSession
-import logging
 
 from db.models import User
 
@@ -29,7 +31,7 @@ class UserDAL:
         await self.db_session.flush()
         return new_user
 
-    async def delete_user(self, user_id: UUID) -> Union[UUID, None]:
+    async def delete_user(self, user_id: UUID) -> UUID | None:
         query = (
             update(User)
             .where(and_(User.user_id == user_id, User.is_active == True))
@@ -40,27 +42,27 @@ class UserDAL:
         delete_user_id_row = res.fetchone()
         if delete_user_id_row is not None:
             return delete_user_id_row[0]
+        return None
 
-    async def get_user(self, user_id: UUID) -> Union[User, None]:
+    async def get_user(self, user_id: UUID) -> User | None:
         query = select(User).where(
-            and_(User.user_id == user_id, User.is_active == True)
+            and_(User.user_id == user_id, User.is_active == True),
         )
         res = await self.db_session.execute(query)
         show_user = res.fetchone()
         if show_user is not None:
             return show_user[0]
+        return None
 
-    async def update_user(self, user_id: UUID, **kwargs) -> Union[UUID, None]:
+    async def update_user(self, user_id: UUID, **kwargs) -> UUID | None:
         query = (
             update(User)
             .where(and_(User.user_id == user_id, User.is_active == True))
             .values(kwargs)
             .returning(User.user_id)
         )
-        logger.debug(f"query:{query}")
-        logger.debug(f"kwargs:{kwargs}")
         res = await self.db_session.execute(query)
-        logger.debug(f"res:{res}")
         updated_user = res.fetchone()
         if updated_user is not None:
             return updated_user[0]
+        return None

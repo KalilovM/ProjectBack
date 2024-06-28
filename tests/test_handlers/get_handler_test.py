@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from uuid import uuid4
 
 
@@ -21,7 +23,9 @@ async def test_get_user(client, create_user_in_db):
 
 
 async def test_get_user_id_validation_error(
-    client, create_user_in_db, get_user_from_database
+    client,
+    create_user_in_db,
+    get_user_from_database,
 ):
     user_data = {
         "user_id": uuid4(),
@@ -43,10 +47,10 @@ async def test_get_user_id_validation_error(
                 "msg": "Input should be a valid UUID, invalid length: expected length 32 for simple format, found 3",
                 "input": "123",
                 "ctx": {
-                    "error": "invalid length: expected length 32 for simple format, found 3"
+                    "error": "invalid length: expected length 32 for simple format, found 3",
                 },
-            }
-        ]
+            },
+        ],
     }
 
 

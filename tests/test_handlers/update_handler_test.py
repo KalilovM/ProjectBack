@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import json
-import pytest
-from uuid import uuid4
 import logging
+from uuid import uuid4
+
+import pytest
 
 
 logger = logging.getLogger(__name__)
@@ -22,7 +25,8 @@ async def test_update_user(client, create_user_in_db, get_user_from_database):
 
     await create_user_in_db(**user_data)
     resp = client.patch(
-        f"/users/{user_data['user_id']}", data=json.dumps(user_data_updated)
+        f"/users/{user_data['user_id']}",
+        data=json.dumps(user_data_updated),
     )
     assert resp.status_code == 200
     user_resp = resp.json()
@@ -36,7 +40,9 @@ async def test_update_user(client, create_user_in_db, get_user_from_database):
 
 
 async def test_update_user_check_one_is_updated(
-    client, create_user_in_db, get_user_from_database
+    client,
+    create_user_in_db,
+    get_user_from_database,
 ):
     user_data_1 = {
         "user_id": uuid4(),
@@ -64,7 +70,8 @@ async def test_update_user_check_one_is_updated(
     for user_data in [user_data_1, user_data_2, user_data_3]:
         await create_user_in_db(**user_data)
     resp = client.patch(
-        f"/users/{user_data_1['user_id']}/", data=json.dumps(user_data_updated)
+        f"/users/{user_data_1['user_id']}/",
+        data=json.dumps(user_data_updated),
     )
     assert resp.status_code == 200
     user_resp = resp.json()
@@ -102,7 +109,7 @@ async def test_update_user_check_one_is_updated(
             {},
             422,
             {
-                "detail": "At least one parameter for user update info should be provided"
+                "detail": "At least one parameter for user update info should be provided",
             },
         ),
         ({"username": "123"}, 422, {"detail": "Username should contains only letters"}),
@@ -117,10 +124,10 @@ async def test_update_user_check_one_is_updated(
                         "msg": "value is not a valid email address: The email address is not valid. It must have exactly one @-sign.",
                         "input": "123",
                         "ctx": {
-                            "reason": "The email address is not valid. It must have exactly one @-sign."
+                            "reason": "The email address is not valid. It must have exactly one @-sign.",
                         },
-                    }
-                ]
+                    },
+                ],
             },
         ),
         (
@@ -134,8 +141,8 @@ async def test_update_user_check_one_is_updated(
                         "loc": ["body", "username"],
                         "msg": "String should have at least 1 character",
                         "type": "string_too_short",
-                    }
-                ]
+                    },
+                ],
             },
         ),
         (
@@ -149,10 +156,10 @@ async def test_update_user_check_one_is_updated(
                         "msg": "value is not a valid email address: The email address is not valid. It must have exactly one @-sign.",
                         "input": "",
                         "ctx": {
-                            "reason": "The email address is not valid. It must have exactly one @-sign."
+                            "reason": "The email address is not valid. It must have exactly one @-sign.",
                         },
-                    }
-                ]
+                    },
+                ],
             },
         ),
     ],
@@ -176,8 +183,55 @@ async def test_update_user_validation_error(
     user_updating_debug = user_data_updated
     logger.debug(f"updating_data: {user_updating_debug}")
     resp = client.patch(
-        f"/users/{user_data['user_id']}", data=json.dumps(user_data_updated)
+        f"/users/{user_data['user_id']}",
+        data=json.dumps(user_data_updated),
     )
     assert resp.status_code == expected_status_code
     resp_data = resp.json()
     assert resp_data == expected_detail
+
+
+async def test_update_user_not_found_error(client):
+    user_data_updated = {
+        "username": "Oxygen",
+        "email": "oxygen@gmail.com",
+        "password": "oxygen0123",
+        "is_active": True,
+    }
+    user_id = uuid4()
+
+    resp = client.patch(f"/users/{user_id}", data=json.dumps(user_data_updated))
+    assert resp.status_code == 404
+    resp_data = resp.json()
+    assert resp_data == {"detail": f"User with id {user_id} not found."}
+
+
+async def test_update_user_duplicate_email_error(client, create_user_in_db):
+    user_data_1 = {
+        "user_id": uuid4(),
+        "username": "Oxygen",
+        "email": "oxygen@gmail.com",
+        "password": "oxygen0123",
+        "is_active": True,
+    }
+    user_data_2 = {
+        "user_id": uuid4(),
+        "username": "Houmie",
+        "email": "houmie@gmail.com",
+        "password": "houmie0123",
+        "is_active": True,
+    }
+
+    user_data_updated = {"email": user_data_2["email"]}
+    for user_data in [user_data_1, user_data_2]:
+        await create_user_in_db(**user_data)
+    resp = client.patch(
+        f"/users/{user_data_1['user_id']}",
+        data=json.dumps(user_data_updated),
+    )
+    assert resp.status_code == 503
+    resp_data = resp.json()
+    assert (
+        'duplicate key value violates unique constraint "users_email_key"'
+        in resp_data["detail"]
+    )
