@@ -4,8 +4,13 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import and_, update, select
 from sqlalchemy.ext.asyncio.session import AsyncSession
+import logging
 
 from db.models import User
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class UserDAL:
@@ -52,7 +57,10 @@ class UserDAL:
             .values(kwargs)
             .returning(User.user_id)
         )
+        logger.debug(f"query:{query}")
+        logger.debug(f"kwargs:{kwargs}")
         res = await self.db_session.execute(query)
+        logger.debug(f"res:{res}")
         updated_user = res.fetchone()
         if updated_user is not None:
             return updated_user[0]

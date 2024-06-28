@@ -5,12 +5,15 @@ import asyncpg
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
+from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 import settings
 from db.session import get_db
 
-test_engine = create_async_engine(settings.TEST_DATABASE_URL, future=True, echo=True)
+test_engine = create_async_engine(
+    settings.TEST_DATABASE_URL, future=True, echo=True, poolclass=NullPool
+)
 test_async_session = async_sessionmaker(
     bind=test_engine, expire_on_commit=False, class_=AsyncSession
 )
@@ -37,7 +40,9 @@ async def run_migrations():
 
 @pytest.fixture(scope="session")
 async def async_session_test():
-    engine = create_async_engine(settings.TEST_DATABASE_URL, future=True, echo=True)
+    engine = create_async_engine(
+        settings.TEST_DATABASE_URL, future=True, echo=True, poolclass=NullPool
+    )
     session = async_sessionmaker(
         bind=engine, expire_on_commit=False, class_=AsyncSession
     )
@@ -55,7 +60,9 @@ async def clean_tables(async_session_test):
 
 async def _get_test_db():
     try:
-        engine = create_async_engine(settings.TEST_DATABASE_URL, future=True, echo=True)
+        engine = create_async_engine(
+            settings.TEST_DATABASE_URL, future=True, echo=True, poolclass=NullPool
+        )
         async_session = async_sessionmaker(
             bind=engine, expire_on_commit=False, class_=AsyncSession
         )
